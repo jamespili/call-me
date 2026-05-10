@@ -1,330 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f0d">
+<title>到了叫我</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 :root{
   --bg:#0a0f0d;--bg2:#111a15;--card:#1a2620;--card2:#1f2e27;
-  --g:#3ddc84;--g2:#2ab56b;--gdim:rgba(61,220,132,0.15);
+  --g:#3ddc84;--g2:#2ab56b;--gdim:rgba(61,220,132,0.14);
   --t:#e8f5ee;--t2:#8aab96;--t3:#4d7060;
-  --b:rgba(61,220,132,0.12);--b2:rgba(61,220,132,0.25);
-  --red:#ff6b6b;--warn:#ffd93d;
+  --b:rgba(61,220,132,0.12);--b2:rgba(61,220,132,0.28);
+  --red:#ff5252;--warn:#ffd93d;
+  --safe: env(safe-area-inset-bottom, 0px);
 }
-body{font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;background:var(--bg);color:var(--t);width:100%;overflow-x:hidden}
-.app{display:flex;flex-direction:column;min-height:100svh;max-width:430px;margin:0 auto;position:relative}
-.statusbar{display:flex;justify-content:space-between;align-items:center;padding:clamp(10px,3vw,14px) clamp(14px,4vw,20px) 4px;font-size:13px;font-weight:500;flex-shrink:0}
-.sbar-r{display:flex;gap:5px;align-items:center}
-.sig{display:flex;gap:2px;align-items:flex-end}
-.sig span{background:var(--t);border-radius:1px;width:3px}
-.sig span:nth-child(1){height:4px}.sig span:nth-child(2){height:7px}.sig span:nth-child(3){height:10px}.sig span:nth-child(4){height:13px;opacity:.35}
-.bat{width:22px;height:12px;border:1.5px solid var(--t);border-radius:2px;position:relative;display:flex;align-items:center;padding:1.5px}
-.bat::after{content:'';position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:3px;height:6px;background:var(--t);border-radius:0 1px 1px 0}
-.bat-fill{background:var(--t);border-radius:1px;height:100%;width:70%}
-.header{display:flex;justify-content:space-between;align-items:center;padding:8px clamp(14px,4vw,20px) 12px;flex-shrink:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t);font-family:-apple-system,'PingFang SC','Noto Sans SC',system-ui,sans-serif}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;max-width:500px;margin:0 auto;position:relative;background:var(--bg)}
+
+/* ── top bar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;padding-top:max(12px, env(safe-area-inset-top, 12px));flex-shrink:0;border-bottom:1px solid var(--b)}
 .brand{display:flex;align-items:center;gap:10px}
-.brand-ico{width:36px;height:36px;border-radius:10px;background:#1a8f4f;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.brand h1{font-size:clamp(14px,4vw,17px);font-weight:700;letter-spacing:.3px}
-.brand p{font-size:11px;color:var(--t2);margin-top:1px}
-.help-btn{background:var(--card);border:1px solid var(--b);border-radius:20px;padding:6px 11px;font-size:12px;color:var(--t2);cursor:pointer;white-space:nowrap}
-.scroll-area{flex:1;overflow-y:auto;padding:0 clamp(12px,3.5vw,16px) 8px;-webkit-overflow-scrolling:touch}
-.scroll-area::-webkit-scrollbar{display:none}
+.brand-ico{width:34px;height:34px;border-radius:10px;background:#1a8f4f;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:.2px}
+.brand-sub{font-size:11px;color:var(--t2);margin-top:1px}
+.status-pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--b);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--t2)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .3s}
+.status-dot.active{background:var(--g);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── scroll body ── */
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;padding-bottom:8px}
+.body::-webkit-scrollbar{display:none}
+
+/* ── screens ── */
 .screen{display:none}.screen.active{display:block}
-.tabbar{display:flex;justify-content:space-around;padding:10px 0 max(16px,env(safe-area-inset-bottom,16px));border-top:1px solid var(--b);background:var(--bg);flex-shrink:0}
-.tab{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex:1;padding:2px 0}
-.tab-ico{font-size:21px;color:var(--t3)}
+
+/* ── tabbar ── */
+.tabbar{display:flex;flex-shrink:0;border-top:1px solid var(--b);background:var(--bg);padding-bottom:max(10px, var(--safe));padding-top:8px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:2px 0;position:relative}
+.tab-ico{font-size:22px;color:var(--t3);transition:color .18s}
 .tab.active .tab-ico{color:var(--g)}
-.tab-lbl{font-size:10px;color:var(--t3)}
+.tab-lbl{font-size:10px;color:var(--t3);transition:color .18s}
 .tab.active .tab-lbl{color:var(--g)}
-.card{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:13px 14px;margin-bottom:11px}
-.card-title{font-size:13px;color:var(--g);font-weight:600;display:flex;align-items:center;gap:7px;margin-bottom:12px}
-.d8{width:7px;height:7px;background:var(--g);border-radius:50%;flex-shrink:0}
-.search-wrap{position:relative;margin-bottom:11px}
-.search{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:11px 14px;display:flex;align-items:center;gap:9px}
-.search-ico{font-size:17px;color:var(--t2);flex-shrink:0}
-.sinput{flex:1;background:none;border:none;outline:none;font-size:15px;color:var(--t);font-family:inherit;min-width:0}
-.sinput::placeholder{color:var(--t3)}
-.loc-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--b2);background:var(--gdim);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
-.sugg{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--b);border-radius:12px;overflow:hidden;z-index:50}
+.tab-dot{width:4px;height:4px;border-radius:50%;background:var(--red);position:absolute;top:2px;right:calc(50% - 14px);display:none}
+.tab-dot.show{display:block}
+
+/* ── cards ── */
+.card{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:13px 14px;margin-bottom:10px}
+.card-title{font-size:12px;color:var(--g);font-weight:600;display:flex;align-items:center;gap:6px;margin-bottom:11px;text-transform:uppercase;letter-spacing:.5px}
+.ctdot{width:6px;height:6px;background:var(--g);border-radius:50%;flex-shrink:0}
+
+/* ── search ── */
+.search-wrap{position:relative;margin-bottom:10px}
+.search-box{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:11px 14px;display:flex;align-items:center;gap:9px;cursor:text}
+.search-box:focus-within{border-color:var(--b2)}
+.si{flex:1;background:none;border:none;outline:none;font-size:15px;color:var(--t);font-family:inherit;min-width:0}
+.si::placeholder{color:var(--t3)}
+.loc-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--b2);background:var(--gdim);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;transition:opacity .15s}
+.loc-btn:active{opacity:.6}
+.sugg{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#1e2e28;border:1px solid var(--b2);border-radius:12px;overflow:hidden;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .sugg.show{display:block}
-.sitem{display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--b)}
-.sitem:last-child{border-bottom:none}
-.sitem:active{background:var(--card2)}
-.sitem-ico{font-size:18px;flex-shrink:0}
-.sitem-name{font-size:14px;font-weight:600;color:var(--t)}
-.sitem-sub{font-size:11px;color:var(--t2)}
-.dest{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:11px;margin-bottom:11px}
-.dest-ico{width:40px;height:40px;border-radius:11px;background:#1a3f6e;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.si-item{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--b)}
+.si-item:last-child{border-bottom:none}
+.si-item:active{background:var(--card2)}
+.si-ico{font-size:18px;flex-shrink:0}
+.si-name{font-size:14px;font-weight:600;color:var(--t)}
+.si-sub{font-size:11px;color:var(--t2);margin-top:1px}
+
+/* ── dest card ── */
+.dest-card{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.dest-ico-wrap{width:42px;height:42px;border-radius:11px;background:#0f2d4d;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
 .dest-info{flex:1;min-width:0}
-.dest-lbl{font-size:11px;color:var(--t3)}
-.dest-name{font-size:clamp(15px,4vw,17px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dest-meta{font-size:12px;color:var(--t2);margin-top:3px;display:flex;align-items:center;gap:4px}
-.dot6{width:6px;height:6px;background:var(--g);border-radius:50%;display:inline-block;flex-shrink:0}
-.chg{background:var(--card2);border:1px solid var(--b);border-radius:9px;padding:7px 11px;font-size:12px;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
-.gps-notice{display:none;background:rgba(255,217,61,.1);border:1px solid rgba(255,217,61,.3);border-radius:10px;padding:9px 13px;font-size:12px;color:var(--warn);text-align:center;margin-bottom:10px}
-.gps-notice.show{display:block}
-.strip{display:none;background:var(--gdim);border:1px solid var(--b2);border-radius:10px;padding:9px 13px;margin-bottom:10px}
-.strip.show{display:flex;flex-direction:column;gap:3px}
-.strip-row{display:flex;justify-content:space-between;align-items:center}
-.strip-lbl{font-size:12px;color:var(--t2)}
-.strip-val{font-size:13px;font-weight:600;color:var(--g)}
-.map-wrap{border-radius:15px;overflow:hidden;border:1px solid var(--b);position:relative;margin-bottom:11px;background:#0d1f18}
-.map-wrap canvas{display:block;width:100%}
-.reloc{position:absolute;bottom:12px;left:12px;background:rgba(10,15,13,.85);border:1px solid var(--b);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:5px}
-.dbadge{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--g);background:rgba(10,15,13,.7);padding:4px 9px;border-radius:20px;border:1px solid var(--b2)}
+.dest-lbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px}
+.dest-name{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.dest-sub{font-size:12px;color:var(--t2);margin-top:3px;display:flex;align-items:center;gap:5px}
+.dest-sub-dot{width:5px;height:5px;border-radius:50%;background:var(--g);flex-shrink:0}
+.chg-btn{background:var(--card2);border:1px solid var(--b);border-radius:9px;padding:7px 11px;font-size:12px;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.chg-btn:active{opacity:.7}
+
+/* ── notice ── */
+.notice{display:none;border-radius:10px;padding:9px 13px;font-size:12px;text-align:center;margin-bottom:10px}
+.notice.warn{background:rgba(255,217,61,.1);border:1px solid rgba(255,217,61,.3);color:var(--warn)}
+.notice.ok{background:var(--gdim);border:1px solid var(--b2);color:var(--g)}
+.notice.show{display:block}
+
+/* ── live strip ── */
+.live-strip{display:none;background:var(--gdim);border:1px solid var(--b2);border-radius:11px;padding:10px 14px;margin-bottom:10px;gap:0}
+.live-strip.show{display:flex;flex-direction:column;gap:5px}
+.ls-row{display:flex;justify-content:space-between;align-items:center}
+.ls-lbl{font-size:12px;color:var(--t2)}
+.ls-val{font-size:13px;font-weight:600;color:var(--g)}
+
+/* ── map ── */
+.map-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--b);position:relative;margin-bottom:10px;background:#0d1f18;flex-shrink:0}
+.map-wrap canvas{display:block;width:100%;height:100%}
+.map-badge{position:absolute;right:11px;top:10px;background:rgba(10,15,13,.82);border:1px solid var(--b2);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--g)}
+.map-reloc{position:absolute;bottom:10px;left:10px;background:rgba(10,15,13,.82);border:1px solid var(--b);border-radius:16px;padding:6px 12px;font-size:11px;color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:5px}
+.map-reloc:active{opacity:.7}
+
+/* ── pills ── */
 .pills{display:flex;gap:6px}
-.pill{flex:1;padding:9px 0;border-radius:9px;text-align:center;font-size:clamp(11px,3vw,13px);font-weight:500;cursor:pointer;background:var(--bg2);border:1px solid var(--b);color:var(--t2);transition:all .18s}
-.pill.active{background:var(--g);color:#0a2e1a;border-color:var(--g);font-weight:700}
-.hint{margin-top:9px;font-size:12px;color:var(--t2);text-align:center}
-.hint strong{color:var(--g);font-weight:700}
-.start-btn{width:100%;border-radius:15px;padding:clamp(14px,4vw,18px) 18px;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;border:none;font-family:inherit;background:linear-gradient(135deg,#3ddc84,#2fd37c 50%,#d4e56b);transition:transform .15s;box-shadow:0 4px 28px rgba(61,220,132,.28);margin-bottom:12px}
-.start-btn:active{transform:scale(.97)}
-.start-btn.armed{background:linear-gradient(135deg,#ff6b6b,#ff4444 50%,#ff8c00);box-shadow:0 4px 28px rgba(255,70,70,.32);animation:pb 2s ease-in-out infinite}
-@keyframes pb{0%,100%{box-shadow:0 4px 28px rgba(255,70,70,.32)}50%{box-shadow:0 4px 48px rgba(255,70,70,.55)}}
-.alarm-ico-btn{width:40px;height:40px;background:rgba(0,0,0,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.btn-txt h2{font-size:clamp(15px,4.5vw,18px);font-weight:700;color:#0a2e1a}
-.btn-txt p{font-size:11px;color:rgba(10,46,26,.7);margin-top:1px}
-.start-btn.armed .btn-txt h2,.start-btn.armed .btn-txt p{color:#fff}
-.start-btn.armed .alarm-ico-btn{background:rgba(255,255,255,.2)}
-.overlay{display:none;position:absolute;inset:0;z-index:99;background:rgba(0,0,0,.96);flex-direction:column;align-items:center;justify-content:center;padding:40px 24px}
-.overlay.show{display:flex;animation:oi .3s ease}
-@keyframes oi{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:scale(1)}}
-.alarm-ring{width:clamp(150px,40vw,190px);height:clamp(150px,40vw,190px);border-radius:50%;border:3px solid var(--red);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px;animation:rp .6s ease-in-out infinite}
-.alarm-ring::before{content:'';position:absolute;inset:-16px;border-radius:50%;border:2px solid rgba(255,107,107,.3);animation:rp .6s ease-in-out infinite .2s}
-.alarm-ring::after{content:'';position:absolute;inset:-32px;border-radius:50%;border:1px solid rgba(255,107,107,.15);animation:rp .6s ease-in-out infinite .4s}
-@keyframes rp{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-.alarm-emoji{font-size:clamp(55px,15vw,72px);animation:sk .3s ease-in-out infinite}
-@keyframes sk{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
-.alarm-txt{text-align:center;margin-bottom:30px}
-.alarm-txt h2{font-size:clamp(20px,5.5vw,26px);font-weight:700;color:#fff;margin-bottom:6px}
-.alarm-txt .ost{font-size:clamp(17px,4.5vw,21px);font-weight:700;color:var(--red);margin:4px 0}
-.alarm-txt p{font-size:14px;color:rgba(255,255,255,.6);line-height:1.6}
-.dismiss{padding:14px clamp(32px,9vw,44px);border-radius:50px;border:none;background:var(--red);color:#fff;font-size:clamp(14px,4vw,17px);font-weight:700;cursor:pointer;font-family:inherit;animation:dp .8s ease infinite}
-@keyframes dp{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,.5)}50%{box-shadow:0 0 0 16px rgba(255,107,107,0)}}
+.pill{flex:1;padding:9px 0;border-radius:9px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;background:var(--bg2);border:1px solid var(--b);color:var(--t2);transition:all .15s;-webkit-user-select:none}
+.pill.on{background:var(--g);color:#0a2e1a;border-color:var(--g);font-weight:700}
+.hint-txt{margin-top:8px;font-size:12px;color:var(--t2);text-align:center}
+.hint-txt strong{color:var(--g);font-weight:700}
 
-/* ——— 警报设置 ——— */
-.row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--b)}
-.row:last-child{border-bottom:none}
-.row-left{display:flex;align-items:center;gap:10px}
-.row-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0}
-.row-title{font-size:14px;font-weight:600;color:var(--t)}
-.row-sub{font-size:11px;color:var(--t2);margin-top:2px}
-.toggle{width:44px;height:24px;border-radius:12px;background:var(--bg2);border:1px solid var(--b);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
-.toggle.on{background:var(--g2)}
-.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:3px;transition:left .2s}
-.toggle.on::after{left:23px}
-.sel-group{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.sel-chip{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--b);background:var(--bg2);color:var(--t2);cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px}
-.sel-chip.on{background:var(--gdim);border-color:var(--b2);color:var(--g);font-weight:600}
-.vol-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+/* ── main CTA ── */
+.cta{width:100%;border-radius:15px;padding:16px 18px;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;border:none;font-family:inherit;background:#3ddc84;transition:transform .12s,opacity .12s;margin-bottom:10px}
+.cta:active{transform:scale(.97);opacity:.9}
+.cta.armed{background:var(--red);animation:armed-pulse 2s ease-in-out infinite}
+@keyframes armed-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,82,82,.4)}50%{box-shadow:0 0 0 12px rgba(255,82,82,0)}}
+.cta-ico{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.cta-title{font-size:17px;font-weight:700;color:#0a2e1a}
+.cta-sub{font-size:11px;color:rgba(10,46,26,.65);margin-top:1px}
+.cta.armed .cta-title,.cta.armed .cta-sub{color:#fff}
+
+/* ── alarm overlay (in-flow, not fixed) ── */
+#alarm-overlay{display:none;background:#0a0f0d;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px 64px;min-height:100dvh;position:fixed;inset:0;z-index:9999}
+#alarm-overlay.show{display:flex}
+.alarm-ring{width:160px;height:160px;border-radius:50%;border:3px solid var(--red);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:28px;animation:ring-pulse .7s ease-in-out infinite}
+.alarm-ring::before{content:'';position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(255,82,82,.25);animation:ring-pulse .7s ease-in-out infinite .15s}
+.alarm-ring::after{content:'';position:absolute;inset:-28px;border-radius:50%;border:1px solid rgba(255,82,82,.12);animation:ring-pulse .7s ease-in-out infinite .3s}
+@keyframes ring-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.alarm-emoji{font-size:68px;animation:shake .25s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.alarm-title{font-size:26px;font-weight:700;color:#fff;text-align:center;margin-bottom:6px}
+.alarm-station{font-size:22px;font-weight:700;color:var(--red);text-align:center;margin-bottom:10px}
+.alarm-desc{font-size:14px;color:rgba(255,255,255,.55);text-align:center;line-height:1.7;margin-bottom:36px}
+.dismiss-btn{padding:16px 48px;border-radius:50px;border:none;background:var(--red);color:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;animation:dismiss-glow .9s ease infinite}
+@keyframes dismiss-glow{0%,100%{box-shadow:0 0 0 0 rgba(255,82,82,.5)}50%{box-shadow:0 0 0 16px rgba(255,82,82,0)}}
+.dismiss-btn:active{transform:scale(.96)}
+
+/* ── settings rows ── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--b)}
+.srow:last-child{border-bottom:none}
+.srow-left{display:flex;align-items:center;gap:10px}
+.srow-ico{font-size:19px;width:26px;text-align:center;flex-shrink:0}
+.srow-title{font-size:14px;font-weight:600;color:var(--t)}
+.srow-sub{font-size:11px;color:var(--t2);margin-top:1px}
+.toggle{width:46px;height:26px;border-radius:13px;background:var(--bg2);border:1px solid var(--b);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--g2);border-color:var(--g2)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .18s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{left:22px}
+.sel-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.chip{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--b);background:var(--bg2);color:var(--t2);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;-webkit-user-select:none}
+.chip.on{background:var(--gdim);border-color:var(--b2);color:var(--g);font-weight:600}
+.chip:active{opacity:.7}
+.vol-row{display:flex;align-items:center;gap:10px;margin-top:12px}
 .vol-lbl{font-size:12px;color:var(--t2);white-space:nowrap}
-.vol-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--b2);outline:none}
-.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--g);cursor:pointer}
-.preview-btn{background:var(--gdim);border:1px solid var(--b2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--g);cursor:pointer;white-space:nowrap;flex-shrink:0}
-.preview-btn:active{opacity:.7}
+.vol-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:rgba(61,220,132,.25);outline:none;cursor:pointer}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--g);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.preview-btn{background:var(--gdim);border:1px solid var(--b2);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--g);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.preview-btn:active{opacity:.6}
 
-/* ——— 我的 ——— */
-.profile-hero{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border:1px solid var(--b);border-radius:13px;margin-bottom:11px}
-.avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--g2),#1a8f4f);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
-.profile-name{font-size:16px;font-weight:700;color:var(--t)}
-.profile-sub{font-size:12px;color:var(--t2);margin-top:2px}
-.fav-list{display:flex;flex-direction:column;gap:0}
-.fav-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--b);cursor:pointer}
-.fav-item:last-child{border-bottom:none}
-.fav-item:active{opacity:.7}
-.fav-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0}
-.fav-name{font-size:14px;font-weight:600;color:var(--t);flex:1}
-.fav-meta{font-size:11px;color:var(--t2)}
-.fav-del{font-size:18px;color:var(--t3);padding:4px;cursor:pointer}
-.add-fav{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1px dashed var(--b2);border-radius:10px;color:var(--g);font-size:13px;cursor:pointer;margin-top:4px}
-.stat-row{display:flex;gap:10px;margin-bottom:11px}
-.stat-box{flex:1;background:var(--card);border:1px solid var(--b);border-radius:11px;padding:12px;text-align:center}
+/* ── profile / history ── */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat-box{background:var(--card);border:1px solid var(--b);border-radius:11px;padding:12px 8px;text-align:center}
 .stat-num{font-size:22px;font-weight:700;color:var(--g)}
-.stat-lbl{font-size:11px;color:var(--t2);margin-top:3px}
+.stat-lbl{font-size:10px;color:var(--t2);margin-top:3px}
+.list-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--b)}
+.list-item:last-child{border-bottom:none}
+.li-ico{font-size:20px;width:26px;text-align:center;flex-shrink:0}
+.li-info{flex:1;min-width:0}
+.li-name{font-size:13px;font-weight:600;color:var(--t)}
+.li-sub{font-size:11px;color:var(--t2);margin-top:2px}
+.badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600}
+.badge.ok{background:var(--gdim);color:var(--g)}
+.badge.miss{background:rgba(255,82,82,.14);color:var(--red)}
+.empty-hint{text-align:center;padding:18px;font-size:13px;color:var(--t3)}
+.add-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1px dashed var(--b2);border-radius:10px;color:var(--g);font-size:13px;cursor:pointer;margin-top:6px}
+.add-row:active{opacity:.7}
+.fav-use{background:var(--gdim);border:1px solid var(--b2);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--g);cursor:pointer;margin-right:5px}
+.fav-del{font-size:17px;color:var(--t3);padding:4px;cursor:pointer}
+.profile-hero{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border:1px solid var(--b);border-radius:13px;margin-bottom:10px}
+.avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--g2),#1a8f4f);display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
+.profile-name{font-size:15px;font-weight:700}
+.profile-sub{font-size:12px;color:var(--t2);margin-top:2px}
 
-/* ——— 使用教程 ——— */
-.tut-hero{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:18px 16px;margin-bottom:11px;text-align:center}
-.tut-hero-ico{font-size:40px;margin-bottom:8px}
-.tut-hero h2{font-size:17px;font-weight:700;color:var(--t);margin-bottom:6px}
+/* ── tutorial ── */
+.tut-hero{background:var(--card);border:1px solid var(--b);border-radius:13px;padding:18px 16px;margin-bottom:10px;text-align:center}
+.tut-hero-ico{font-size:38px;margin-bottom:8px}
+.tut-hero h2{font-size:16px;font-weight:700;margin-bottom:6px}
 .tut-hero p{font-size:13px;color:var(--t2);line-height:1.7}
-.step-list{display:flex;flex-direction:column;gap:10px;margin-bottom:11px}
-.step{display:flex;gap:12px;background:var(--card);border:1px solid var(--b);border-radius:13px;padding:13px}
-.step-num{width:28px;height:28px;border-radius:50%;background:var(--gdim);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--g);flex-shrink:0}
-.step-body{}
+.step{display:flex;gap:12px;background:var(--card);border:1px solid var(--b);border-radius:13px;padding:13px;margin-bottom:8px}
+.step-n{width:28px;height:28px;border-radius:50%;background:var(--gdim);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--g);flex-shrink:0}
 .step-title{font-size:14px;font-weight:700;color:var(--t);margin-bottom:4px}
 .step-desc{font-size:12px;color:var(--t2);line-height:1.65}
 .step-tag{display:inline-block;background:var(--gdim);border:1px solid var(--b2);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--g);margin-top:5px}
-.tip-card{background:rgba(255,217,61,.08);border:1px solid rgba(255,217,61,.25);border-radius:11px;padding:12px 14px;margin-bottom:11px}
-.tip-title{font-size:13px;font-weight:600;color:var(--warn);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.tip-item{font-size:12px;color:rgba(255,217,61,.8);line-height:1.7;padding-left:14px;position:relative}
-.tip-item::before{content:'·';position:absolute;left:4px}
-.faq{display:flex;flex-direction:column;gap:0;background:var(--card);border:1px solid var(--b);border-radius:13px;overflow:hidden;margin-bottom:11px}
-.faq-item{padding:12px 14px;border-bottom:1px solid var(--b);cursor:pointer}
-.faq-item:last-child{border-bottom:none}
+.tip-card{background:rgba(255,217,61,.07);border:1px solid rgba(255,217,61,.22);border-radius:11px;padding:12px 14px;margin-bottom:10px}
+.tip-title{font-size:12px;font-weight:600;color:var(--warn);margin-bottom:6px}
+.tip-item{font-size:12px;color:rgba(255,217,61,.75);line-height:1.7;padding-left:13px;position:relative}
+.tip-item::before{content:'·';position:absolute;left:3px}
+.faq-item{padding:12px 14px;border-bottom:1px solid var(--b);cursor:pointer;background:var(--card)}
+.faq-item:first-child{border-radius:13px 13px 0 0}
+.faq-item:last-child{border-bottom:none;border-radius:0 0 13px 13px}
+.faq-wrap{border:1px solid var(--b);border-radius:13px;overflow:hidden;margin-bottom:10px}
 .faq-q{font-size:13px;font-weight:600;color:var(--t);display:flex;justify-content:space-between;align-items:center}
 .faq-a{font-size:12px;color:var(--t2);line-height:1.65;margin-top:7px;display:none}
 .faq-item.open .faq-a{display:block}
+.faq-arr{transition:transform .2s;font-size:13px;color:var(--t3);flex-shrink:0;margin-left:8px}
 .faq-item.open .faq-arr{transform:rotate(180deg)}
-.faq-arr{transition:transform .2s;font-size:14px;color:var(--t3);flex-shrink:0}
-
-/* ——— 历史记录 ——— */
-.hist-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--b)}
-.hist-item:last-child{border-bottom:none}
-.hist-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0}
-.hist-info{flex:1;min-width:0}
-.hist-name{font-size:13px;font-weight:600;color:var(--t)}
-.hist-time{font-size:11px;color:var(--t2);margin-top:2px}
-.badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600}
-.badge.ok{background:var(--gdim);color:var(--g)}
-.badge.miss{background:rgba(255,107,107,.12);color:var(--red)}
 </style>
 
-<div class="app" id="app">
-  <div class="statusbar">
-    <span id="clk">9:41</span>
-    <div class="sbar-r">
-      <div class="sig"><span></span><span></span><span></span><span></span></div>
-      <span style="font-size:12px">▲</span>
-      <div class="bat"><div class="bat-fill"></div></div>
-    </div>
-  </div>
-  <div class="header">
+<div id="app">
+  <div class="topbar">
     <div class="brand">
       <div class="brand-ico">📍</div>
       <div>
-        <h1>到了叫我</h1>
-        <p>GPS 地理围栏唤醒</p>
+        <div class="brand-name">到了叫我</div>
+        <div class="brand-sub">GPS 地理围栏到站唤醒</div>
       </div>
     </div>
-    <div class="help-btn" onclick="goTab(3)">❓ 使用教程</div>
+    <div class="status-pill" id="statusPill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusTxt">未启动</span>
+    </div>
   </div>
 
-  <div class="scroll-area">
+  <div class="body" id="body">
 
     <!-- ===== 首页 ===== -->
     <div class="screen active" id="s0">
       <div class="search-wrap">
-        <div class="search" onclick="document.getElementById('si').focus()">
-          <span class="search-ico">🔍</span>
-          <input id="si" class="sinput" type="search" placeholder="搜索目的地站点" oninput="doSearch(this.value)" onblur="setTimeout(hideSugg,200)" autocomplete="off">
-          <div class="loc-btn" onclick="locateMe()">🎯</div>
+        <div class="search-box">
+          <span style="font-size:17px;color:var(--t3);flex-shrink:0">🔍</span>
+          <input id="si" class="si" type="search" placeholder="搜索目的地站点…" autocomplete="off" oninput="doSearch(this.value)" onblur="setTimeout(hideSugg,200)">
+          <div class="loc-btn" onclick="locateMe()" title="定位附近">🎯</div>
         </div>
         <div class="sugg" id="sugg"></div>
       </div>
-      <div class="dest">
-        <div class="dest-ico" id="dIco">🚆</div>
+
+      <div class="dest-card">
+        <div class="dest-ico-wrap" id="dIco">🚆</div>
         <div class="dest-info">
           <div class="dest-lbl">目的地</div>
           <div class="dest-name" id="dName">北京南站</div>
-          <div class="dest-meta"><span class="dot6"></span><span>预计到达区域 · <strong style="color:var(--g)" id="dDistLbl">2公里</strong>范围内触发</span></div>
+          <div class="dest-sub"><span class="dest-sub-dot"></span><span>进入 <strong id="dDistLbl" style="color:var(--g)">2公里</strong> 警戒圈时唤醒</span></div>
         </div>
-        <div class="chg" onclick="document.getElementById('si').focus()">↺ 更换</div>
+        <div class="chg-btn" onclick="document.getElementById('si').focus()">↺ 换站</div>
       </div>
-      <div class="gps-notice" id="gpsN">⚠️ 请允许浏览器访问位置权限</div>
-      <div class="strip" id="strip">
-        <div class="strip-row"><span class="strip-lbl">🛡️ 警报已激活</span><span class="strip-val" id="armStat">监测中…</span></div>
-        <div class="strip-row"><span class="strip-lbl">距目的地</span><span class="strip-val" id="curDist">—</span></div>
+
+      <div class="notice warn" id="noticeGps">⚠️ 请允许定位权限</div>
+      <div class="notice ok" id="noticeOk">✅ 定位已获取，可以开启闹钟</div>
+
+      <div class="live-strip" id="liveStrip">
+        <div class="ls-row"><span class="ls-lbl">🛡️ 监测中</span><span class="ls-val" id="armStat">实时定位</span></div>
+        <div class="ls-row"><span class="ls-lbl">📍 距目的地</span><span class="ls-val" id="curDist">计算中…</span></div>
+        <div class="ls-row"><span class="ls-lbl">🎯 警戒圈半径</span><span class="ls-val" id="stripRadius">2.0 km</span></div>
       </div>
-      <div class="map-wrap" id="mapWrap">
-        <canvas id="mc"></canvas>
-        <div class="reloc" onclick="locateMe()">⊙ 重新定位</div>
-        <div class="dbadge" id="dbadge">2.0km</div>
+
+      <div class="map-wrap" id="mapWrap" style="height:200px">
+        <canvas id="mc" width="360" height="200"></canvas>
+        <div class="map-badge" id="mapBadge">2.0 km</div>
+        <div class="map-reloc" onclick="locateMe()">⊙ 重新定位</div>
       </div>
+
       <div class="card">
-        <div class="card-title"><div class="d8"></div>触发距离设置</div>
+        <div class="card-title"><div class="ctdot"></div>触发距离</div>
         <div class="pills" id="pills">
           <div class="pill" onclick="setD(0.5,this)">500m</div>
           <div class="pill" onclick="setD(1,this)">1km</div>
-          <div class="pill active" onclick="setD(2,this)">2km</div>
+          <div class="pill on" onclick="setD(2,this)">2km</div>
           <div class="pill" onclick="setD(3,this)">3km</div>
           <div class="pill" onclick="setD(5,this)">5km</div>
         </div>
-        <div class="hint">当您进入 <strong id="hintD">2公里</strong> 范围内时，闹钟将会触发</div>
+        <div class="hint-txt">进入 <strong id="hintD">2 公里</strong> 范围时触发警报</div>
       </div>
-      <button class="start-btn" id="startBtn" onclick="toggleArm()">
-        <div class="alarm-ico-btn" id="aIco">⏰</div>
-        <div class="btn-txt">
-          <h2 id="btnTitle">开启 GPS 闹钟</h2>
-          <p id="btnSub">进入警戒圈时将强力唤醒</p>
+
+      <button class="cta" id="ctaBtn" onclick="toggleArm()">
+        <div class="cta-ico" id="ctaIco">⏰</div>
+        <div>
+          <div class="cta-title" id="ctaTitle">开启 GPS 闹钟</div>
+          <div class="cta-sub" id="ctaSub">进入警戒圈时强力唤醒</div>
         </div>
       </button>
     </div>
 
-    <!-- ===== 闹钟记录 ===== -->
+    <!-- ===== 记录 ===== -->
     <div class="screen" id="s1">
-      <div class="stat-row">
-        <div class="stat-box"><div class="stat-num" id="stTotal">5</div><div class="stat-lbl">累计唤醒</div></div>
-        <div class="stat-box"><div class="stat-num" id="stSaved">5</div><div class="stat-lbl">成功到站</div></div>
-        <div class="stat-box"><div class="stat-num">0</div><div class="stat-lbl">坐过站</div></div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num" id="stTotal">0</div><div class="stat-lbl">累计唤醒</div></div>
+        <div class="stat-box"><div class="stat-num" id="stOk">0</div><div class="stat-lbl">成功到站</div></div>
+        <div class="stat-box"><div class="stat-num" id="stMiss">0</div><div class="stat-lbl">坐过站</div></div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="d8"></div>最近记录</div>
-        <div class="fav-list" id="histList"></div>
+        <div class="card-title"><div class="ctdot"></div>最近记录</div>
+        <div id="histList"><div class="empty-hint">暂无记录，快去坐车试试吧 🚆</div></div>
       </div>
     </div>
 
-    <!-- ===== 警报设置 ===== -->
+    <!-- ===== 设置 ===== -->
     <div class="screen" id="s2">
       <div class="card">
-        <div class="card-title"><div class="d8"></div>铃声选择</div>
-        <div class="sel-group" id="ringtoneGroup">
-          <div class="sel-chip on" data-ring="0" onclick="pickRing(this)">🔔 急促警铃</div>
-          <div class="sel-chip" data-ring="1" onclick="pickRing(this)">🚨 消防警报</div>
-          <div class="sel-chip" data-ring="2" onclick="pickRing(this)">📯 高铁到站</div>
-          <div class="sel-chip" data-ring="3" onclick="pickRing(this)">🎵 节拍强音</div>
-          <div class="sel-chip" data-ring="4" onclick="pickRing(this)">🔊 极限轰鸣</div>
+        <div class="card-title"><div class="ctdot"></div>铃声选择</div>
+        <div class="sel-chips" id="ringChips">
+          <div class="chip on" data-ring="0" onclick="pickRing(this)">🔔 急促警铃</div>
+          <div class="chip" data-ring="1" onclick="pickRing(this)">🚨 消防警报</div>
+          <div class="chip" data-ring="2" onclick="pickRing(this)">📯 高铁到站</div>
+          <div class="chip" data-ring="3" onclick="pickRing(this)">🎵 节拍强音</div>
+          <div class="chip" data-ring="4" onclick="pickRing(this)">🔊 极限轰鸣</div>
         </div>
-        <div class="vol-row" style="margin-top:14px">
-          <span class="vol-lbl">🔈 音量</span>
-          <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" oninput="updateVol(this.value)">
+        <div class="vol-row">
+          <span class="vol-lbl">🔈</span>
+          <input type="range" class="vol-slider" id="volSlider" min="0" max="100" step="1" value="80" oninput="updateVol(this.value)">
           <span class="vol-lbl" id="volVal">80%</span>
           <div class="preview-btn" onclick="previewRing()">▶ 试听</div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="d8"></div>振动设置</div>
-        <div class="row">
-          <div class="row-left">
-            <span class="row-ico">📳</span>
-            <div><div class="row-title">开启振动</div><div class="row-sub">进入警戒圈时震动手机</div></div>
-          </div>
+        <div class="card-title"><div class="ctdot"></div>振动 &amp; 其他</div>
+        <div class="srow">
+          <div class="srow-left"><span class="srow-ico">📳</span><div><div class="srow-title">开启振动</div><div class="srow-sub">进入警戒圈时震动</div></div></div>
           <div class="toggle on" id="togVib" onclick="toggleTog('togVib')"></div>
         </div>
-        <div class="row">
-          <div class="row-left">
-            <span class="row-ico">💥</span>
-            <div><div class="row-title">持续振动</div><div class="row-sub">未关闭前每2秒重复振动</div></div>
-          </div>
+        <div class="srow">
+          <div class="srow-left"><span class="srow-ico">💥</span><div><div class="srow-title">持续振动</div><div class="srow-sub">每 2 秒重复震动</div></div></div>
           <div class="toggle on" id="togRepeat" onclick="toggleTog('togRepeat')"></div>
         </div>
-        <div style="margin-top:10px">
-          <div class="card-title" style="margin-bottom:8px"><div class="d8"></div>振动模式</div>
-          <div class="sel-group" id="vibGroup">
-            <div class="sel-chip on" data-vib="0" onclick="pickVib(this)">📳 短促连击</div>
-            <div class="sel-chip" data-vib="1" onclick="pickVib(this)">🌊 波浪递进</div>
-            <div class="sel-chip" data-vib="2" onclick="pickVib(this)">⚡ SOS模式</div>
-            <div class="sel-chip" data-vib="3" onclick="pickVib(this)">🔨 强力单击</div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title"><div class="d8"></div>其他设置</div>
-        <div class="row">
-          <div class="row-left">
-            <span class="row-ico">📱</span>
-            <div><div class="row-title">屏幕常亮</div><div class="row-sub">监测期间保持屏幕不熄灭</div></div>
-          </div>
+        <div class="srow">
+          <div class="srow-left"><span class="srow-ico">📱</span><div><div class="srow-title">屏幕常亮</div><div class="srow-sub">监测期间阻止息屏</div></div></div>
           <div class="toggle on" id="togWake" onclick="toggleTog('togWake')"></div>
         </div>
-        <div class="row">
-          <div class="row-left">
-            <span class="row-ico">🌙</span>
-            <div><div class="row-title">勿扰模式穿透</div><div class="row-sub">即使静音也强制触发警报</div></div>
-          </div>
-          <div class="toggle on" id="togDnd" onclick="toggleTog('togDnd')"></div>
-        </div>
-        <div class="row">
-          <div class="row-left">
-            <span class="row-ico">🔁</span>
-            <div><div class="row-title">自动重置</div><div class="row-sub">关闭警报后自动准备下次</div></div>
-          </div>
+        <div class="srow">
+          <div class="srow-left"><span class="srow-ico">🔁</span><div><div class="srow-title">警报后自动重置</div><div class="srow-sub">关闭后保持待命状态</div></div></div>
           <div class="toggle" id="togReset" onclick="toggleTog('togReset')"></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="card-title" style="margin-bottom:8px"><div class="ctdot"></div>振动模式</div>
+          <div class="sel-chips" id="vibChips">
+            <div class="chip on" data-vib="0" onclick="pickVib(this)">📳 短促连击</div>
+            <div class="chip" data-vib="1" onclick="pickVib(this)">🌊 波浪递进</div>
+            <div class="chip" data-vib="2" onclick="pickVib(this)">⚡ SOS</div>
+            <div class="chip" data-vib="3" onclick="pickVib(this)">🔨 强力单击</div>
+          </div>
         </div>
       </div>
     </div>
@@ -334,130 +346,72 @@ body{font-family:'PingFang SC','Noto Sans SC',system-ui,sans-serif;background:va
       <div class="profile-hero">
         <div class="avatar">😴</div>
         <div>
-          <div class="profile-name">通勤补觉达人</div>
-          <div class="profile-sub">已成功唤醒 5 次 · 0 次坐过站</div>
+          <div class="profile-name" id="profileName">通勤补觉达人</div>
+          <div class="profile-sub" id="profileSub">累计唤醒 0 次</div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="d8"></div>常用站点</div>
-        <div class="fav-list" id="favList"></div>
-        <div class="add-fav" onclick="addFav()">＋ 添加常用站点</div>
+        <div class="card-title"><div class="ctdot"></div>常用站点</div>
+        <div id="favList"><div class="empty-hint">还没有常用站点</div></div>
+        <div class="add-row" onclick="showAddFav()">＋ 添加常用站点</div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="d8"></div>默认触发距离</div>
+        <div class="card-title"><div class="ctdot"></div>默认触发距离</div>
         <div class="pills" id="defPills">
           <div class="pill" onclick="setDefD(0.5,this)">500m</div>
           <div class="pill" onclick="setDefD(1,this)">1km</div>
-          <div class="pill active" onclick="setDefD(2,this)">2km</div>
+          <div class="pill on" onclick="setDefD(2,this)">2km</div>
           <div class="pill" onclick="setDefD(3,this)">3km</div>
           <div class="pill" onclick="setDefD(5,this)">5km</div>
-        </div>
-        <div class="hint" style="margin-top:8px">每次打开应用自动应用此距离</div>
-      </div>
-      <div class="card">
-        <div class="card-title"><div class="d8"></div>偏好设置</div>
-        <div class="row">
-          <div class="row-left"><span class="row-ico">🌙</span><div><div class="row-title">深色模式</div><div class="row-sub">始终使用深色界面</div></div></div>
-          <div class="toggle on" id="togDark" onclick="toggleTog('togDark')"></div>
-        </div>
-        <div class="row">
-          <div class="row-left"><span class="row-ico">📊</span><div><div class="row-title">记录出行历史</div><div class="row-sub">保存每次唤醒的记录</div></div></div>
-          <div class="toggle on" id="togHist" onclick="toggleTog('togHist')"></div>
-        </div>
-        <div class="row">
-          <div class="row-left"><span class="row-ico">📡</span><div><div class="row-title">高精度GPS</div><div class="row-sub">更耗电但定位更准确</div></div></div>
-          <div class="toggle on" id="togGps" onclick="toggleTog('togGps')"></div>
         </div>
       </div>
     </div>
 
-    <!-- ===== 使用教程 ===== -->
+    <!-- ===== 教程 ===== -->
     <div class="screen" id="s4">
       <div class="tut-hero">
         <div class="tut-hero-ico">🚆💤</div>
         <h2>再也不怕坐过站</h2>
-        <p>不用设时间，只用设地点。<br>无论车快车慢、堵不堵车，<br>进了警戒圈就叫醒你。</p>
+        <p>不用设时间，只设地点。<br>无论车快车慢，进了警戒圈就叫醒你。</p>
       </div>
-      <div class="step-list">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <div class="step-title">搜索目的地站点</div>
-            <div class="step-desc">在搜索框输入终点站名称，如"北京南站"、"上海虹桥"。支持高铁站、地铁站、机场等任意地点。也可点击 🎯 按钮自动定位当前位置附近的站点。</div>
-            <span class="step-tag">支持模糊搜索</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <div class="step-title">设定警戒圈距离</div>
-            <div class="step-desc">选择距终点多远时叫醒你。高铁推荐 2km（约2分钟），地铁推荐 500m～1km，长途大巴推荐 3km。距离越大越保险，但会更早唤醒。</div>
-            <span class="step-tag">默认 2km · 可自定义</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <div class="step-title">点击开启 GPS 闹钟</div>
-            <div class="step-desc">浏览器会申请定位权限，点击"允许"。开启后按钮变红，表示正在实时监测你的位置。此时可以放心入睡。</div>
-            <span class="step-tag">保持网页在前台</span>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-body">
-            <div class="step-title">自动触发 · 强力唤醒</div>
-            <div class="step-desc">当你的位置进入警戒圈，立即触发最高强度铃声 + 持续震动 + 全屏红色警报。点击"我已醒了"关闭。</div>
-            <span class="step-tag">声音 + 震动双保险</span>
-          </div>
-        </div>
-      </div>
+      <div class="step"><div class="step-n">1</div><div><div class="step-title">搜索目的地</div><div class="step-desc">在搜索框输入终点站名，支持高铁站、地铁站、机场等。点击 🎯 可自动定位附近站点。</div><span class="step-tag">支持模糊搜索</span></div></div>
+      <div class="step"><div class="step-n">2</div><div><div class="step-title">设定警戒圈距离</div><div class="step-desc">高铁建议 2km（约2分钟车程），地铁建议 500m～1km，长途大巴建议 3km。</div><span class="step-tag">默认 2km</span></div></div>
+      <div class="step"><div class="step-n">3</div><div><div class="step-title">开启 GPS 闹钟</div><div class="step-desc">点击绿色按钮，允许定位权限后开始监测。按钮变红代表警报已激活。</div><span class="step-tag">保持页面在前台</span></div></div>
+      <div class="step"><div class="step-n">4</div><div><div class="step-title">到站自动唤醒</div><div class="step-desc">进入警戒圈立即触发铃声 + 震动 + 全屏警报。点击"我已醒了"关闭。</div><span class="step-tag">声音 + 震动双保险</span></div></div>
       <div class="tip-card">
-        <div class="tip-title">⚠️ 使用注意事项</div>
-        <div class="tip-item">保持手机屏幕不锁屏，或开启"屏幕常亮"选项</div>
-        <div class="tip-item">确保已允许浏览器使用位置权限</div>
-        <div class="tip-item">建议出发前提前测试一次铃声音量</div>
-        <div class="tip-item">手机音量调到最大以确保被唤醒</div>
-        <div class="tip-item">高铁隧道中 GPS 可能短暂失效，建议选大一档距离</div>
+        <div class="tip-title">⚠️ 注意事项</div>
+        <div class="tip-item">保持屏幕不锁屏，或开启"屏幕常亮"</div>
+        <div class="tip-item">确保浏览器已授予位置权限</div>
+        <div class="tip-item">出发前将音量调至最大</div>
+        <div class="tip-item">高铁隧道内 GPS 可能短暂失效，建议调大一档距离</div>
+        <div class="tip-item">iOS 请用 Safari，并保持页面在前台</div>
       </div>
-      <div class="faq">
-        <div class="faq-item" onclick="toggleFaq(this)">
-          <div class="faq-q">为什么需要位置权限？<span class="faq-arr">▾</span></div>
-          <div class="faq-a">本应用完全在你的浏览器本地运行，位置数据不会上传服务器。权限仅用于实时计算你与目的地的距离，是核心功能的必要条件。</div>
-        </div>
-        <div class="faq-item" onclick="toggleFaq(this)">
-          <div class="faq-q">锁屏后还能唤醒吗？<span class="faq-arr">▾</span></div>
-          <div class="faq-a">部分手机锁屏后浏览器会暂停 GPS 监测。建议：① 设置手机不自动锁屏；② 开启"屏幕常亮"；③ 将浏览器设为"允许后台运行"。iOS 用户建议保持 Safari 在前台。</div>
-        </div>
-        <div class="faq-item" onclick="toggleFaq(this)">
-          <div class="faq-q">GPS 精度够吗？<span class="faq-arr">▾</span></div>
-          <div class="faq-a">室外 GPS 精度通常在 5～15 米，对于 500m～5km 的警戒圈完全够用。隧道、地下室等遮蔽环境会有延迟，建议适当加大警戒圈距离以留余量。</div>
-        </div>
-        <div class="faq-item" onclick="toggleFaq(this)">
-          <div class="faq-q">我没搜到想要的站怎么办？<span class="faq-arr">▾</span></div>
-          <div class="faq-a">目前内置了主要高铁站、机场。后续将支持手动在地图上标记任意位置，或直接输入经纬度坐标。</div>
-        </div>
+      <div class="faq-wrap">
+        <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">为什么需要位置权限？<span class="faq-arr">▾</span></div><div class="faq-a">完全在本地浏览器运行，位置数据不上传服务器，仅用于计算你与目的地的距离。</div></div>
+        <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">锁屏后还能唤醒吗？<span class="faq-arr">▾</span></div><div class="faq-a">锁屏后部分浏览器会暂停定位。建议：① 开启屏幕常亮；② 设置不自动锁屏；③ 浏览器设为允许后台运行。iOS 需保持 Safari 在前台。</div></div>
+        <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">GPS 精度够用吗？<span class="faq-arr">▾</span></div><div class="faq-a">室外精度通常 5～15 米，对 500m 以上的警戒圈足够。隧道内可能延迟，建议适当加大距离。</div></div>
+        <div class="faq-item" onclick="toggleFaq(this)"><div class="faq-q">没有我要找的站怎么办？<span class="faq-arr">▾</span></div><div class="faq-a">目前内置了主要高铁站和机场。后续版本将支持手动在地图上点选任意位置。</div></div>
       </div>
     </div>
 
-  </div>
+  </div><!-- end body -->
 
   <div class="tabbar">
     <div class="tab active" onclick="goTab(0)"><div class="tab-ico">🏠</div><div class="tab-lbl">首页</div></div>
-    <div class="tab" onclick="goTab(1)"><div class="tab-ico">⏰</div><div class="tab-lbl">闹钟记录</div></div>
-    <div class="tab" onclick="goTab(2)"><div class="tab-ico">🔔</div><div class="tab-lbl">警报设置</div></div>
+    <div class="tab" onclick="goTab(1)"><div class="tab-ico">⏰</div><div class="tab-lbl">记录</div></div>
+    <div class="tab" onclick="goTab(2)"><div class="tab-ico">🔔</div><div class="tab-lbl">设置</div></div>
     <div class="tab" onclick="goTab(3)"><div class="tab-ico">👤</div><div class="tab-lbl">我的</div></div>
+    <div class="tab" onclick="goTab(4)"><div class="tab-ico">❓</div><div class="tab-lbl">教程</div></div>
   </div>
+</div>
 
-  <div class="overlay" id="overlay">
-    <div class="alarm-ring"><div class="alarm-emoji">🚨</div></div>
-    <div class="alarm-txt">
-      <h2>⚡ 快到站了！</h2>
-      <div class="ost" id="oSt">北京南站</div>
-      <p>您已进入警戒圈范围内<br>请立即准备下车！</p>
-    </div>
-    <button class="dismiss" onclick="dismiss()">我已醒了！</button>
-  </div>
+<!-- alarm overlay -->
+<div id="alarm-overlay">
+  <div class="alarm-ring"><div class="alarm-emoji">🚨</div></div>
+  <div class="alarm-title">⚡ 快到站了！</div>
+  <div class="alarm-station" id="alarmStation">北京南站</div>
+  <div class="alarm-desc">您已进入警戒圈范围<br>请立即准备下车！</div>
+  <button class="dismiss-btn" onclick="dismiss()">我已醒了！</button>
 </div>
 
 <script>
@@ -474,35 +428,49 @@ const STATIONS=[
   {n:'天津西站',i:'🚄',lat:39.1484,lng:117.1519,t:'高铁站'},
   {n:'首都机场T3',i:'✈️',lat:40.0799,lng:116.6031,t:'机场'},
   {n:'浦东机场',i:'✈️',lat:31.1443,lng:121.8083,t:'机场'},
+  {n:'大兴机场',i:'✈️',lat:39.5095,lng:116.4105,t:'机场'},
   {n:'北京西站',i:'🚆',lat:39.8951,lng:116.3222,t:'火车站'},
+  {n:'北京站',i:'🚂',lat:39.9040,lng:116.4278,t:'火车站'},
   {n:'上海站',i:'🚂',lat:31.251,lng:121.4559,t:'火车站'},
+  {n:'上海虹桥机场',i:'✈️',lat:31.1979,lng:121.3363,t:'机场'},
   {n:'重庆北站',i:'🚆',lat:29.7082,lng:106.5438,t:'高铁站'},
   {n:'郑州东站',i:'🚅',lat:34.7572,lng:113.8536,t:'高铁站'},
+  {n:'长沙南站',i:'🚆',lat:28.1518,lng:113.0593,t:'高铁站'},
+  {n:'济南西站',i:'🚅',lat:36.6562,lng:116.8228,t:'高铁站'},
+  {n:'合肥南站',i:'🚄',lat:31.8191,lng:117.2052,t:'高铁站'},
+  {n:'苏州北站',i:'🚅',lat:31.4163,lng:120.5975,t:'高铁站'},
+  {n:'无锡东站',i:'🚄',lat:31.5903,lng:120.4253,t:'高铁站'},
+  {n:'厦门北站',i:'🚆',lat:24.6461,lng:118.1472,t:'高铁站'},
+  {n:'福州南站',i:'🚅',lat:25.8612,lng:119.2961,t:'高铁站'},
+  {n:'昆明南站',i:'🚆',lat:24.8518,lng:102.7969,t:'高铁站'},
 ];
 
-const HISTORY=[
-  {i:'🚆',n:'北京南站',time:'2024-05-06 14:32',ok:true},
-  {i:'✈️',n:'首都机场T3',time:'2024-05-03 08:15',ok:true},
-  {i:'🚄',n:'上海虹桥站',time:'2024-04-28 19:47',ok:true},
-  {i:'🚅',n:'广州南站',time:'2024-04-21 11:02',ok:true},
-  {i:'🚆',n:'武汉站',time:'2024-04-15 16:20',ok:true},
+const RING_PATTERNS=[
+  [[880,0,.1],[1100,.13,.1],[880,.26,.1],[1100,.39,.1],[880,.52,.1],[1320,.65,.2],[880,1.0,.1],[1100,1.13,.1],[1320,1.26,.25]],
+  [[440,0,.2],[880,.22,.2],[440,.44,.2],[880,.66,.2],[1760,.9,.5],[440,1.5,.2],[880,1.72,.2],[1760,1.95,.4]],
+  [[523,0,.25],[659,.3,.25],[784,.6,.25],[1047,.9,.5],[784,1.5,.15],[659,1.7,.15],[523,1.9,.3]],
+  [[110,0,.08],[220,.1,.08],[440,.2,.08],[880,.3,.08],[1760,.42,.3],[880,.8,.08],[440,.9,.08],[220,1.0,.08],[110,1.12,.4]],
+  [[110,0,.4],[220,0,.4],[440,0,.4],[880,0,.4],[1760,0,.6],[110,.7,.4],[330,.7,.4],[770,.7,.4],[1540,.7,.6]],
 ];
-
-let favs=[
-  {i:'🚆',n:'北京南站',t:'高铁站'},
-  {i:'🚄',n:'上海虹桥站',t:'高铁站'},
+const RING_TYPES=['square','square','triangle','square','sawtooth'];
+const VIB_PATS=[
+  [200,80,200,80,200,80,400],
+  [100,60,200,60,400,60,600],
+  [300,100,100,100,100,100,300,100,100,100,300],
+  [500,150,500]
 ];
 
 let dist=2,station=STATIONS[0],armed=false,watchId=null,fired=false;
-let uLat=null,uLng=null,audioCtx=null,alarmTimer=null;
-let ringIdx=0,vol=0.8,vibOn=true,repeatVib=true;
-const VOLS=[300,100,300,100,300,100,500,100,300,100,500];
-const VIB_PATS=[[200,80,200,80,200,80,400],[100,60,200,60,400,60,600],[300,100,100,100,100,100,300,100,100,100,300],[500,150,500]];
+let uLat=null,uLng=null,audioCtx=null,alarmAudioTimer=null,alarmVibTimer=null;
+let ringIdx=0,vol=0.8,vibOn=true,repeatVib=true,vibPatIdx=0;
+let history=[],favs=[];
+let wakeLock=null;
 
 function goTab(i){
   document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
   document.querySelectorAll('.screen').forEach((s,j)=>s.classList.toggle('active',i===j));
-  if(i===0)setTimeout(drawMap,80);
+  document.getElementById('body').scrollTop=0;
+  if(i===0)setTimeout(drawMap,50);
   if(i===1)renderHist();
   if(i===3)renderFavs();
 }
@@ -515,133 +483,198 @@ function hav(a,b,c,d){
 
 function setD(km,el){
   dist=km;
-  document.querySelectorAll('#pills .pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  const lbl=km<1?km*1000+'m':km+'公里';
+  document.querySelectorAll('#pills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  const lbl=km<1?(km*1000)+'m':km+'公里';
   document.getElementById('dDistLbl').textContent=lbl;
   document.getElementById('hintD').textContent=lbl;
-  document.getElementById('dbadge').textContent=km+'km';
+  document.getElementById('mapBadge').textContent=km<1?(km*1000)+'m':km+'.0 km';
+  document.getElementById('stripRadius').textContent=km<1?(km*1000)+'m':km.toFixed(1)+' km';
   drawMap();
 }
 function setDefD(km,el){
   dist=km;
-  document.querySelectorAll('#defPills .pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('dbadge').textContent=km+'km';
+  document.querySelectorAll('#defPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
 }
 
 function doSearch(v){
   const b=document.getElementById('sugg');
   if(!v.trim()){b.classList.remove('show');return}
-  const r=STATIONS.filter(s=>s.n.includes(v)||s.t.includes(v)).slice(0,6);
+  const r=STATIONS.filter(s=>s.n.includes(v)||s.t.includes(v)).slice(0,7);
   if(!r.length){b.classList.remove('show');return}
-  b.innerHTML=r.map(s=>`<div class="sitem" onclick="pick('${s.n}')"><span class="sitem-ico">${s.i}</span><div><div class="sitem-name">${s.n}</div><div class="sitem-sub">${s.t}</div></div></div>`).join('');
+  b.innerHTML=r.map(s=>`<div class="si-item" onclick="pick('${s.n}')">
+    <span class="si-ico">${s.i}</span>
+    <div><div class="si-name">${s.n}</div><div class="si-sub">${s.t}</div></div>
+  </div>`).join('');
   b.classList.add('show');
 }
 function hideSugg(){document.getElementById('sugg').classList.remove('show')}
+
 function pick(n){
   const s=STATIONS.find(x=>x.n===n);if(!s)return;
   station=s;
   document.getElementById('dIco').textContent=s.i;
   document.getElementById('dName').textContent=s.n;
-  document.getElementById('oSt').textContent=s.n;
+  document.getElementById('alarmStation').textContent=s.n;
   document.getElementById('si').value='';
-  hideSugg();drawMap();if(uLat!==null)updateDist();
+  hideSugg();
+  drawMap();
+  if(uLat!==null)updateDist();
 }
+
 function locateMe(){
-  if(!navigator.geolocation){showGpsErr('不支持GPS定位');return}
+  if(!navigator.geolocation){showNotice('gps','⚠️ 浏览器不支持GPS定位');return}
   navigator.geolocation.getCurrentPosition(p=>{
     uLat=p.coords.latitude;uLng=p.coords.longitude;
-    document.getElementById('gpsN').classList.remove('show');
+    hideNotice('gps');showNotice('ok');
+    setTimeout(()=>hideNotice('ok'),2500);
     drawMap();updateDist();
-  },()=>showGpsErr('⚠️ 请在浏览器设置中允许定位权限'));
+  },err=>{
+    showNotice('gps','⚠️ 定位失败，请在浏览器设置中允许位置权限');
+  },{enableHighAccuracy:true,timeout:10000});
 }
-function showGpsErr(m){const e=document.getElementById('gpsN');e.textContent=m;e.classList.add('show')}
+
+function showNotice(type,msg){
+  if(type==='gps'){
+    const el=document.getElementById('noticeGps');
+    if(msg)el.textContent=msg;
+    el.classList.add('show');
+  } else {
+    document.getElementById('noticeOk').classList.add('show');
+  }
+}
+function hideNotice(type){
+  if(type==='gps')document.getElementById('noticeGps').classList.remove('show');
+  else document.getElementById('noticeOk').classList.remove('show');
+}
+
 function updateDist(){
   if(!station||uLat===null)return;
   const d=hav(uLat,uLng,station.lat,station.lng);
-  document.getElementById('curDist').textContent=d<1?Math.round(d*1000)+'m':d.toFixed(1)+'km';
+  const dStr=d<1?Math.round(d*1000)+' m':d.toFixed(1)+' km';
+  document.getElementById('curDist').textContent=dStr;
   if(d<=dist&&armed&&!fired)trigger();
 }
+
 function toggleArm(){
-  if(!navigator.geolocation){showGpsErr('⚠️ 请允许浏览器访问位置权限');return}
+  if(!navigator.geolocation){showNotice('gps','⚠️ 请允许浏览器定位权限');return}
   armed?disarm():arm();
 }
+
 function arm(){
   fired=false;armed=true;
-  const btn=document.getElementById('startBtn');btn.classList.add('armed');
-  document.getElementById('aIco').textContent='🚨';
-  document.getElementById('btnTitle').textContent='关闭 GPS 闹钟';
-  document.getElementById('btnSub').textContent='点击停止监测';
-  document.getElementById('strip').classList.add('show');
-  document.getElementById('gpsN').classList.remove('show');
+  const btn=document.getElementById('ctaBtn');
+  btn.classList.add('armed');
+  document.getElementById('ctaIco').textContent='🚨';
+  document.getElementById('ctaTitle').textContent='关闭 GPS 闹钟';
+  document.getElementById('ctaSub').textContent='点击可停止监测';
+  document.getElementById('liveStrip').classList.add('show');
+  document.getElementById('statusDot').classList.add('active');
+  document.getElementById('statusTxt').textContent='监测中';
+  hideNotice('gps');
   watchId=navigator.geolocation.watchPosition(p=>{
     uLat=p.coords.latitude;uLng=p.coords.longitude;
     drawMap();updateDist();
-  },()=>{showGpsErr('⚠️ 无法持续定位');disarm();},{enableHighAccuracy:true,maximumAge:5000});
+  },err=>{
+    showNotice('gps','⚠️ 无法持续定位');disarm();
+  },{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+  if(document.getElementById('togWake').classList.contains('on'))acquireWakeLock();
 }
+
 function disarm(){
   armed=false;
   if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}
-  const btn=document.getElementById('startBtn');btn.classList.remove('armed');
-  document.getElementById('aIco').textContent='⏰';
-  document.getElementById('btnTitle').textContent='开启 GPS 闹钟';
-  document.getElementById('btnSub').textContent='进入警戒圈时将强力唤醒';
-  document.getElementById('strip').classList.remove('show');
+  const btn=document.getElementById('ctaBtn');
+  btn.classList.remove('armed');
+  document.getElementById('ctaIco').textContent='⏰';
+  document.getElementById('ctaTitle').textContent='开启 GPS 闹钟';
+  document.getElementById('ctaSub').textContent='进入警戒圈时强力唤醒';
+  document.getElementById('liveStrip').classList.remove('show');
+  document.getElementById('statusDot').classList.remove('active');
+  document.getElementById('statusTxt').textContent='未启动';
+  releaseWakeLock();
 }
-function trigger(){
-  fired=true;
-  document.getElementById('overlay').classList.add('show');
-  if(vibOn&&navigator.vibrate){
-    const pat=VIB_PATS[0];
-    navigator.vibrate(pat);
-    if(repeatVib)alarmTimer=setInterval(()=>navigator.vibrate(pat),2200);
-  }
+
+async function acquireWakeLock(){
   try{
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    function playRing(idx){
-      const patterns=[
-        [[880,.0,.14],[1100,.18,.14],[880,.36,.14],[1320,.54,.28],[880,.95,.14],[1100,1.13,.14],[1320,1.32,.35]],
-        [[440,.0,.08],[880,.1,.08],[440,.2,.08],[880,.3,.08],[1760,.5,.5]],
-        [[523,.0,.25],[659,.3,.25],[784,.6,.25],[1047,.9,.5]],
-        [[220,.0,.05],[440,.08,.05],[880,.16,.05],[1760,.24,.3],[880,.6,.05],[440,.68,.05],[220,.76,.3]],
-        [[110,.0,.3],[220,.0,.3],[440,.0,.3],[880,.0,.3],[1760,.0,.6]],
-      ];
-      const seq=patterns[idx]||patterns[0];
-      seq.forEach(([f,s,d])=>{
-        const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-        o.connect(g);g.connect(audioCtx.destination);
-        o.frequency.value=f;o.type=idx===4?'sawtooth':'square';
-        g.gain.setValueAtTime(vol*.5,audioCtx.currentTime+s);
-        g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+s+d);
-        o.start(audioCtx.currentTime+s);o.stop(audioCtx.currentTime+s+d+.05);
-      });
+    if('wakeLock' in navigator){
+      wakeLock=await navigator.wakeLock.request('screen');
     }
-    playRing(ringIdx);
-    alarmTimer=setInterval(()=>playRing(ringIdx),2500);
   }catch(e){}
 }
+function releaseWakeLock(){
+  if(wakeLock){wakeLock.release();wakeLock=null}
+}
+
+function trigger(){
+  fired=true;
+  document.getElementById('alarm-overlay').classList.add('show');
+  const pat=VIB_PATS[vibPatIdx]||VIB_PATS[0];
+  if(vibOn&&navigator.vibrate){
+    navigator.vibrate(pat);
+    if(repeatVib)alarmVibTimer=setInterval(()=>navigator.vibrate(pat),2200);
+  }
+  startAlarmAudio();
+  alarmAudioTimer=setInterval(startAlarmAudio,2500);
+  const ts=new Date();
+  history.unshift({i:station.i,n:station.n,time:ts.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),ok:true});
+  if(history.length>20)history.pop();
+  saveData();
+}
+
 function dismiss(){
-  document.getElementById('overlay').classList.remove('show');
-  if(alarmTimer){clearInterval(alarmTimer);alarmTimer=null}
+  document.getElementById('alarm-overlay').classList.remove('show');
+  if(alarmAudioTimer){clearInterval(alarmAudioTimer);alarmAudioTimer=null}
+  if(alarmVibTimer){clearInterval(alarmVibTimer);alarmVibTimer=null}
   if(navigator.vibrate)navigator.vibrate(0);
   if(audioCtx){try{audioCtx.close()}catch(e){}audioCtx=null}
-  disarm();
+  if(document.getElementById('togReset').classList.contains('on')){
+    fired=false;
+  } else {
+    disarm();
+  }
+}
+
+function startAlarmAudio(){
+  try{
+    if(!audioCtx||audioCtx.state==='closed')
+      audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    playPattern(audioCtx,ringIdx,vol);
+  }catch(e){}
+}
+
+function playPattern(ctx,idx,volume){
+  const seq=RING_PATTERNS[idx]||RING_PATTERNS[0];
+  const wave=RING_TYPES[idx]||'square';
+  seq.forEach(([freq,st,dur])=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.frequency.value=freq;o.type=wave;
+    const t=ctx.currentTime+st;
+    g.gain.setValueAtTime(volume*0.45,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.start(t);o.stop(t+dur+0.05);
+  });
 }
 
 function pickRing(el){
-  document.querySelectorAll('#ringtoneGroup .sel-chip').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');ringIdx=+el.dataset.ring;
+  document.querySelectorAll('#ringChips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  ringIdx=+el.dataset.ring;
+  previewRing();
 }
 function pickVib(el){
-  document.querySelectorAll('#vibGroup .sel-chip').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('#vibChips .chip').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
+  vibPatIdx=+el.dataset.vib;
+  if(navigator.vibrate)navigator.vibrate(VIB_PATS[vibPatIdx]);
 }
 function toggleTog(id){
-  const el=document.getElementById(id);
-  el.classList.toggle('on');
-  if(id==='togVib')vibOn=el.classList.contains('on');
-  if(id==='togRepeat')repeatVib=el.classList.contains('on');
+  document.getElementById(id).classList.toggle('on');
+  if(id==='togVib')vibOn=document.getElementById(id).classList.contains('on');
+  if(id==='togRepeat')repeatVib=document.getElementById(id).classList.contains('on');
 }
 function updateVol(v){
   vol=v/100;
@@ -650,37 +683,35 @@ function updateVol(v){
 function previewRing(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const freqs=[[880,0,.12],[1100,.15,.12],[1320,.3,.2]];
-    freqs.forEach(([f,s,d])=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);
-      o.frequency.value=f;o.type='square';
-      g.gain.setValueAtTime(vol*.4,ctx.currentTime+s);
-      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+s+d);
-      o.start(ctx.currentTime+s);o.stop(ctx.currentTime+s+d+.05);
-    });
-    setTimeout(()=>{try{ctx.close()}catch(e){}},1500);
+    playPattern(ctx,ringIdx,vol);
+    setTimeout(()=>{try{ctx.close()}catch(e){}},2200);
   }catch(e){}
   if(navigator.vibrate)navigator.vibrate([100,50,100]);
 }
 
 function renderHist(){
-  document.getElementById('histList').innerHTML=HISTORY.map(h=>`
-    <div class="hist-item">
-      <span class="hist-ico">${h.i}</span>
-      <div class="hist-info"><div class="hist-name">${h.n}</div><div class="hist-time">${h.time}</div></div>
-      <span class="badge ${h.ok?'ok':'miss'}">${h.ok?'准时到站':'坐过站'}</span>
-    </div>`).join('');
+  const h=document.getElementById('histList');
+  document.getElementById('stTotal').textContent=history.length;
+  document.getElementById('stOk').textContent=history.filter(x=>x.ok).length;
+  document.getElementById('stMiss').textContent=history.filter(x=>!x.ok).length;
+  document.getElementById('profileSub').textContent='累计唤醒 '+history.length+' 次';
+  if(!history.length){h.innerHTML='<div class="empty-hint">暂无记录，快去坐车试试吧 🚆</div>';return}
+  h.innerHTML=history.map(r=>`<div class="list-item">
+    <span class="li-ico">${r.i}</span>
+    <div class="li-info"><div class="li-name">${r.n}</div><div class="li-sub">${r.time}</div></div>
+    <span class="badge ${r.ok?'ok':'miss'}">${r.ok?'准时到站':'坐过站'}</span>
+  </div>`).join('');
 }
 
 function renderFavs(){
-  document.getElementById('favList').innerHTML=favs.length?favs.map((f,i)=>`
-    <div class="fav-item">
-      <span class="fav-ico">${f.i}</span>
-      <div class="fav-name">${f.n}<br><span style="font-size:11px;color:var(--t2);font-weight:400">${f.t}</span></div>
-      <div onclick="useFav(${i})" style="background:var(--gdim);border:1px solid var(--b2);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--g);cursor:pointer;margin-right:6px">使用</div>
-      <div class="fav-del" onclick="delFav(${i})">✕</div>
-    </div>`).join(''):'<div style="text-align:center;padding:16px;font-size:13px;color:var(--t3)">暂无常用站点</div>';
+  const fl=document.getElementById('favList');
+  if(!favs.length){fl.innerHTML='<div class="empty-hint">还没有常用站点</div>';return}
+  fl.innerHTML=favs.map((f,i)=>`<div class="list-item">
+    <span class="li-ico">${f.i}</span>
+    <div class="li-info"><div class="li-name">${f.n}</div><div class="li-sub">${f.t}</div></div>
+    <div class="fav-use" onclick="useFav(${i})">使用</div>
+    <div class="fav-del" onclick="delFav(${i})">✕</div>
+  </div>`).join('');
 }
 function useFav(i){
   const f=favs[i];
@@ -688,68 +719,136 @@ function useFav(i){
   station=s;
   document.getElementById('dIco').textContent=f.i;
   document.getElementById('dName').textContent=f.n;
-  document.getElementById('oSt').textContent=f.n;
+  document.getElementById('alarmStation').textContent=f.n;
   goTab(0);
 }
-function delFav(i){favs.splice(i,1);renderFavs()}
-function addFav(){
-  const names=STATIONS.filter(s=>!favs.find(f=>f.n===s.n));
-  if(!names.length)return;
-  const s=names[Math.floor(Math.random()*names.length)];
+function delFav(i){favs.splice(i,1);renderFavs();saveData()}
+function showAddFav(){
+  const available=STATIONS.filter(s=>!favs.find(f=>f.n===s.n));
+  if(!available.length){alert('所有站点已添加完毕');return}
+  const names=available.slice(0,8).map(s=>s.n);
+  const pick=prompt('输入要添加的站名（支持以下站点）：\n'+names.join('、'));
+  if(!pick)return;
+  const s=STATIONS.find(x=>x.n.includes(pick.trim()));
+  if(!s){alert('未找到该站点，请检查名称');return}
+  if(favs.find(f=>f.n===s.n)){alert('已在常用列表中');return}
   favs.push({i:s.i,n:s.n,t:s.t});
-  renderFavs();
+  renderFavs();saveData();
 }
 
 function toggleFaq(el){el.classList.toggle('open')}
 
+function saveData(){
+  try{localStorage.setItem('dlwm_hist',JSON.stringify(history));localStorage.setItem('dlwm_favs',JSON.stringify(favs))}catch(e){}
+}
+function loadData(){
+  try{
+    const h=localStorage.getItem('dlwm_hist');if(h)history=JSON.parse(h);
+    const f=localStorage.getItem('dlwm_favs');if(f)favs=JSON.parse(f);
+  }catch(e){}
+}
+
+/* ── Map ── */
 function drawMap(){
   const wrap=document.getElementById('mapWrap');
   const canvas=document.getElementById('mc');
-  const W=wrap.offsetWidth||320,H=Math.round(W*.62);
+  const W=wrap.offsetWidth||340;
+  const H=Math.round(W*0.56);
+  wrap.style.height=H+'px';
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
   ctx.fillStyle='#0d1f18';ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(61,220,132,0.06)';ctx.lineWidth=1;
-  for(let x=0;x<W;x+=36){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
-  for(let y=0;y<H;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-  [[0,H*.55,W*.35,H*.5,W*.65,H*.48,W,H*.44],[0,H*.3,W*.4,H*.32,W,H*.28],[W*.2,0,W*.22,H*.5,W*.25,H],[W*.62,0,W*.62,H*.45,W*.58,H]].forEach(p=>{
-    ctx.strokeStyle='rgba(61,220,132,0.13)';ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)ctx.lineTo(p[i],p[i+1]);ctx.stroke();
+  ctx.strokeStyle='rgba(61,220,132,0.05)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  [[0,H*.55,W*.35,H*.5,W*.7,H*.48,W,H*.44],
+   [0,H*.3,W*.45,H*.32,W,H*.28],
+   [W*.2,0,W*.22,H*.55,W*.26,H],
+   [W*.65,0,W*.63,H*.4,W*.6,H]].forEach(p=>{
+    ctx.strokeStyle='rgba(61,220,132,0.11)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(p[0],p[1]);
+    for(let i=2;i<p.length;i+=2)ctx.lineTo(p[i],p[i+1]);
+    ctx.stroke();
   });
-  const cx=W/2,cy=H/2,r=Math.min(dist/0.008,Math.min(W,H)*.42);
-  const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
-  grd.addColorStop(0,'rgba(61,220,132,0.13)');grd.addColorStop(.7,'rgba(61,220,132,0.06)');grd.addColorStop(1,'rgba(61,220,132,0)');
-  ctx.fillStyle=grd;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+
+  const dX=W/2,dY=H/2;
+  const viewKm=Math.max(dist*2.8,4);
+  const kmPxLat=viewKm/(H/2);
+  const kmPxLng=viewKm/(W/2);
+  const circR=Math.min((dist/viewKm)*(W/2)*0.95, Math.min(W,H)*0.42);
+
+  const grd=ctx.createRadialGradient(dX,dY,0,dX,dY,circR);
+  grd.addColorStop(0,'rgba(61,220,132,0.12)');
+  grd.addColorStop(.75,'rgba(61,220,132,0.05)');
+  grd.addColorStop(1,'rgba(61,220,132,0)');
+  ctx.fillStyle=grd;ctx.beginPath();ctx.arc(dX,dY,circR,0,Math.PI*2);ctx.fill();
   ctx.setLineDash([7,5]);ctx.strokeStyle='rgba(61,220,132,0.65)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
-  ctx.strokeStyle='rgba(61,220,132,0.35)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
-  ctx.fillStyle='rgba(61,220,132,0.22)';ctx.beginPath();ctx.arc(cx,cy,26,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#2ab56b';ctx.beginPath();ctx.arc(cx,cy,17,0,Math.PI*2);ctx.fill();
-  ctx.font='15px serif';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(station?station.i:'🚆',cx,cy);
-  ctx.font='500 11px PingFang SC,sans-serif';
-  const nm=station?station.n:'北京南站',tw=ctx.measureText(nm).width+18;
-  ctx.fillStyle='rgba(10,20,15,0.82)';
-  (function rr(x,y,w,h,rd){ctx.beginPath();ctx.moveTo(x+rd,y);ctx.lineTo(x+w-rd,y);ctx.arcTo(x+w,y,x+w,y+rd,rd);ctx.lineTo(x+w,y+h-rd);ctx.arcTo(x+w,y+h,x+w-rd,y+h,rd);ctx.lineTo(x+rd,y+h);ctx.arcTo(x,y+h,x,y+h-rd,rd);ctx.lineTo(x,y+rd);ctx.arcTo(x,y,x+rd,y,rd);ctx.closePath();ctx.fill()})(cx-tw/2,cy+22,tw,20,4);
-  ctx.fillStyle='#e8f5ee';ctx.fillText(nm,cx,cy+33);
-  const bg=ctx.createLinearGradient(cx,H,cx,cy+28);
-  bg.addColorStop(0,'rgba(80,180,255,0.45)');bg.addColorStop(1,'rgba(80,180,255,0)');
-  ctx.fillStyle=bg;ctx.beginPath();ctx.moveTo(cx-7,H);ctx.lineTo(cx+7,H);ctx.lineTo(cx+2,cy+28);ctx.lineTo(cx-2,cy+28);ctx.closePath();ctx.fill();
-  const ux=cx+12,uy=cy+Math.round(H*.28);
-  ctx.fillStyle='rgba(80,160,255,0.18)';ctx.beginPath();ctx.arc(ux,uy,11,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#4da6ff';ctx.beginPath();ctx.arc(ux,uy,6,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ux,uy,2.5,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(100,160,120,0.5)';ctx.font='9px PingFang SC,sans-serif';ctx.textAlign='left';
-  ['马家堡东路','宣武门外大街'].forEach((t,i)=>ctx.fillText(t,10+i*18,H*.28+i*55));
+  ctx.beginPath();ctx.arc(dX,dY,circR,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(61,220,132,0.3)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(dX,dY);ctx.lineTo(dX+circR,dY);ctx.stroke();
+
+  let uX=null,uY=null;
+  if(uLat!==null&&uLng!==null){
+    const dLat=uLat-station.lat,dLng=uLng-station.lng;
+    const dLatKm=dLat*111;
+    const dLngKm=dLng*111*Math.cos(station.lat*Math.PI/180);
+    uX=dX+dLngKm/kmPxLng;
+    uY=dY-dLatKm/kmPxLat;
+    const pad=20;
+    uX=Math.max(pad,Math.min(W-pad,uX));
+    uY=Math.max(pad,Math.min(H-pad,uY));
+    ctx.strokeStyle='rgba(80,160,255,0.28)';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(uX,uY);ctx.lineTo(dX,dY);ctx.stroke();ctx.setLineDash([]);
+  }
+
+  ctx.fillStyle='rgba(61,220,132,0.2)';ctx.beginPath();ctx.arc(dX,dY,24,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#2ab56b';ctx.beginPath();ctx.arc(dX,dY,15,0,Math.PI*2);ctx.fill();
+  ctx.font='13px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(station?station.i:'🚆',dX,dY);
+  ctx.font='500 10px -apple-system,PingFang SC,sans-serif';
+  const nm=station?station.n:'北京南站',tw=ctx.measureText(nm).width+16;
+  ctx.fillStyle='rgba(10,20,15,0.85)';
+  roundRect(ctx,dX-tw/2,dY+19,tw,18,4);
+  ctx.fillStyle='#e8f5ee';ctx.fillText(nm,dX,dY+29);
+
+  if(uX!==null){
+    ctx.fillStyle='rgba(80,160,255,0.16)';ctx.beginPath();ctx.arc(uX,uY,13,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(80,160,255,0.38)';ctx.beginPath();ctx.arc(uX,uY,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#4da6ff';ctx.beginPath();ctx.arc(uX,uY,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(uX,uY,2,0,Math.PI*2);ctx.fill();
+    ctx.font='500 9px -apple-system,PingFang SC,sans-serif';
+    const uw=ctx.measureText('我').width+12;
+    ctx.fillStyle='rgba(10,20,15,0.82)';
+    roundRect(ctx,uX-uw/2,uY-25,uw,16,4);
+    ctx.fillStyle='#9dd4ff';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('我',uX,uY-17);
+  } else {
+    const demoX=dX+W*0.2,demoY=dY-H*0.2;
+    ctx.fillStyle='rgba(80,160,255,0.1)';ctx.beginPath();ctx.arc(demoX,demoY,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(80,160,255,0.35)';ctx.beginPath();ctx.arc(demoX,demoY,5,0,Math.PI*2);ctx.fill();
+    ctx.font='9px -apple-system,PingFang SC,sans-serif';
+    ctx.fillStyle='rgba(100,170,255,0.55)';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('定位中',demoX,demoY-17);
+  }
 }
 
-function tick(){
-  const n=new Date(),h=String(n.getHours()).padStart(2,'0'),m=String(n.getMinutes()).padStart(2,'0');
-  document.getElementById('clk').textContent=h+':'+m;
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();ctx.fill();
 }
-tick();setInterval(tick,10000);
-window.addEventListener('load',()=>{drawMap();locateMe();renderHist();renderFavs()});
-const ro=new ResizeObserver(()=>{if(document.getElementById('s0').classList.contains('active'))drawMap()});
+
+const ro=new ResizeObserver(()=>{
+  if(document.getElementById('s0').classList.contains('active'))drawMap();
+});
 ro.observe(document.getElementById('mapWrap'));
+
+loadData();
+renderHist();
+renderFavs();
+drawMap();
+locateMe();
 </script>
+</body>
+</html>
